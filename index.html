@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Image API</title>
+</head>
+<body>
+<h1>Image API</h1>
+<input id="imageUrl" type="text" placeholder="Enter image URL (must allow CORS)" />
+<button id="analyzeBtn">Analyze Image</button>
+<pre id="output">Waiting for input...</pre>
+<canvas id="canvas" style="display:none;"></canvas>
+<script>
+async function getImagePixels(imageUrl) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "Anonymous"; // Important for CORS
+    img.onload = () => {
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, img.width, img.height).data;
+
+      const pixels = [];
+      for (let y = 0; y < img.height; y++) {
+        for (let x = 0; x < img.width; x++) {
+          const i = (y * img.width + x) * 4;
+          const r = imageData[i];
+          const g = imageData[i + 1];
+          const b = imageData[i + 2];
+          const hex = "#" + ((1 << 24) | (r << 16) | (g << 8) | b)
+            .toString(16)
+            .slice(1)
+            .toUpperCase();
+          pixels.push(hex);
+        }
+      }
+
+      resolve({
+        width: img.width,
+        height: img.height,
+        pixels
+      });
+    };
+    img.onerror = () => reject("Failed to load image (CORS or invalid URL).");
+    img.src = imageUrl;
+  });
+}
+
+document.getElementById("analyzeBtn").addEventListener("click", async () => {
+  const imageUrl = document.getElementById("imageUrl").value.trim();
+  const output = document.getElementById("output");
+  if (!imageUrl) {
+    output.textContent = "Please enter a valid image URL.";
+    return;
+  }
+
+  output.textContent = "Analyzing...";
+  try {
+    const data = await getImagePixels(imageUrl);
+    output.textContent = JSON.stringify(data, null, 2);
+  } catch (err) {
+    output.textContent = "Error: " + err;
+  }
+});
+</script>
+</body>
+</html>
