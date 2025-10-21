@@ -1,3 +1,3 @@
 function addText() {
-  document.innerHTML = "testing 123";
+  document.documentElement.innerHTML = "testing 123";
 }
