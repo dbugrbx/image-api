@@ -1,1 +1,3 @@
-console.log('Hello World');
+function addText() {
+  document.innerHTML = "testing 123";
+}
